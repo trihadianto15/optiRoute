@@ -32,6 +32,7 @@ import {
   normalizeText
 } from "./lib/ocr";
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function App() {
 
@@ -78,49 +79,63 @@ export default function App() {
    */
   useEffect(() => {
 
-    async function loadDatabase() {
+  async function loadDatabase() {
 
-      try {
+    try {
 
-        const response =
-          await axios.get(
-            "http://localhost:3001/route_optimization"
-          );
+      const response = await axios.get(
+        `${API_URL}/route_optimization`
+      );
 
-        const formattedData =
-          response.data.map((loc) => ({
-            ...loc,
-            latitude: Number(loc.latitude),
-            longitude: Number(loc.longitude),
-            rt: Number(loc.rt),
-            rw: Number(loc.rw),
-            type: "delivery"
-          }));
+      const formattedData = response.data.map((loc) => ({
+        ...loc,
+        latitude: Number(loc.latitude),
+        longitude: Number(loc.longitude),
+        rt: Number(loc.rt),
+        rw: Number(loc.rw),
+        type: "delivery"
+      }));
 
-        setDatabase(formattedData);
+      setDatabase(formattedData);
 
-      } catch (error) {
+    } catch (error) {
 
-        console.error(
-          "Gagal mengambil data:",
-          error
-        );
-
-      }
+      console.error(
+        "Gagal mengambil data:",
+        error
+      );
 
     }
 
-    loadDatabase();
+  }
 
-  }, []);
+  loadDatabase();
+
+}, []);
 
   /**
    * UPDATE STATUS PAKET
    */
   const updateStatus = async (
-    uniqueId,
-    status
-  ) => {
+  uniqueId,
+  status
+) => {
+
+  try {
+
+    const selectedPoint =
+      fullRoute.find(
+        item => item.uniqueId === uniqueId
+      );
+
+    if (!selectedPoint) return;
+
+    await axios.put(
+      `${API_URL}/route_optimization/${selectedPoint.id}/status`,
+      {
+        status
+      }
+    );
 
     setFullRoute((prev) =>
       prev.map((item) =>
@@ -133,7 +148,16 @@ export default function App() {
       )
     );
 
-  };
+  } catch (error) {
+
+    console.error(
+      "Gagal update status:",
+      error
+    );
+
+  }
+
+};
 
   /**
    * OCR + MATCHING + OPTIMASI
@@ -458,9 +482,8 @@ if (matched) {
        */
       try {
 
-        await axios.post(
-          "http://localhost:3001/route_history",
-          {
+      await axios.post(
+        `${API_URL}/route_history`,{
 
             total_titik:
               updatedPoints.length,
