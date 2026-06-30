@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 import {
   MapContainer,
@@ -6,73 +6,89 @@ import {
   Marker,
   Popup,
   Polyline,
+  Tooltip,
   useMap
-} from 'react-leaflet';
+} from "react-leaflet";
 
-import L from 'leaflet';
+import L from "leaflet";
 
-import 'leaflet/dist/leaflet.css';
+import "leaflet/dist/leaflet.css";
 
-import { getRealRoute } from '../lib/Routing';
+import { getOSRMRoute } from "../lib/osrm";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
 
   iconUrl:
-    'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
 
   shadowUrl:
-    'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png"
 });
 
 function FitBounds({ route }) {
+
   const map = useMap();
 
   useEffect(() => {
-    if (!route.length) return;
+
+    if (route.length < 2) return;
 
     const bounds = L.latLngBounds(
-      route.map((p) => [
-        p.latitude,
-        p.longitude
+
+      route.map(item => [
+
+        item.latitude,
+        item.longitude
+
       ])
+
     );
 
     map.fitBounds(bounds, {
+
       padding: [40, 40]
+
     });
+
   }, [route, map]);
 
   return null;
+
 }
 
 export default function RouteMap({
+
   route = [],
   allPoints = []
+
 }) {
 
-  const [realRoute, setRealRoute] =
+  const [roadRoute, setRoadRoute] =
     useState([]);
 
   useEffect(() => {
 
-    async function loadRoute() {
+    async function loadRoad() {
 
       if (route.length < 2) {
-        setRealRoute([]);
+
+        setRoadRoute([]);
         return;
+
       }
 
       const result =
-        await getRealRoute(route);
+        await getOSRMRoute(route);
 
-      setRealRoute(result);
+      setRoadRoute(result);
+
     }
 
-    loadRoute();
+    loadRoad();
 
   }, [route]);
 
@@ -82,59 +98,93 @@ export default function RouteMap({
           route[0].latitude,
           route[0].longitude
         ]
-      : [-6.2, 106.816666];
+      : [-6.8845, 106.7981];
 
-return (
-  <div
-  className="
-    relative
-    z-0
-    w-full
-    h-[400px]
-    md:h-[600px]
-    lg:h-[750px]
-  "
-  >
+  return (
+
+    <div
+      className="
+        relative
+        z-0
+        w-full
+        h-[400px]
+        md:h-[600px]
+        lg:h-[750px]
+      "
+    >
 
       <MapContainer
         center={center}
-        zoom={12}
-        className="w-full h-full rounded-xl z-0"
+        zoom={13}
+        className="w-full h-full rounded-xl"
       >
 
-      <TileLayer
-        attribution="&copy; OpenStreetMap"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
-      {allPoints.map((loc, idx) => (
-        <Marker
-          key={idx}
-          position={[
-            loc.latitude,
-            loc.longitude
-          ]}
-        >
-          <Popup>
-            <b>{loc.nama}</b>
-            <br />
-            RT {loc.rt} RW {loc.rw}
-          </Popup>
-        </Marker>
-      ))}
-
-      {realRoute.length > 0 && (
-        <Polyline
-          positions={realRoute}
-          color="blue"
-          weight={6}
+        <TileLayer
+          attribution="&copy; OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-      )}
 
-      <FitBounds route={route} />
+        {route.map((point, index) => (
 
-    </MapContainer>
+          <Marker
+            key={index}
+            position={[
+              point.latitude,
+              point.longitude
+            ]}
+          >
 
-  </div>
-);
+            <Tooltip
+              permanent
+              direction="top"
+              offset={[0, -15]}
+            >
+              {index + 1}
+            </Tooltip>
+
+            <Popup>
+
+              <b>{point.nama}</b>
+
+              <br />
+
+              Desa {point.desa}
+
+              <br />
+
+              RT {point.rt} RW {point.rw}
+
+              {point.packageCount > 1 && (
+
+                <>
+                  <br />
+                  📦 {point.packageCount} Paket
+                </>
+
+              )}
+
+            </Popup>
+
+          </Marker>
+
+        ))}
+
+        {roadRoute.length > 0 && (
+
+          <Polyline
+            positions={roadRoute}
+            color="#2563eb"
+            weight={6}
+          />
+
+        )}
+
+        <FitBounds route={route} />
+
+      </MapContainer>
+
+    </div>
+
+  );
+
 }

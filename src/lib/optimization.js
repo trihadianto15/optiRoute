@@ -94,3 +94,42 @@ export function calculateSegmentDistances(route) {
 
   return segments;
 }
+
+/**
+ * Hitung estimasi waktu tempuh
+ * Kecepatan rata-rata motor = 30 km/jam
+ */
+/**
+ * Estimasi waktu perjalanan
+ * Asumsi kecepatan kendaraan 30 km/jam
+ */
+export function calculateTravelTime(distance) {
+
+  const speed = 20; // km/jam
+
+  const minutes =
+    Math.round((distance / speed) * 60);
+
+  if (minutes < 60) {
+    return `${minutes} menit`;
+  }
+
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+
+  return `${hour} jam ${minute} menit`;
+}
+
+/**
+ * Hitung total estimasi waktu
+ */
+export function calculateTotalTravelTime(totalDistance) {
+
+  const averageSpeed = 30;
+
+  const minutes =
+    (totalDistance / averageSpeed) * 60;
+
+  return Math.round(minutes);
+
+}

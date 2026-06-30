@@ -18,7 +18,9 @@ import {
 import {
   solveNearestNeighbor,
   calculateRouteDistance,
-  calculateSegmentDistances
+  calculateSegmentDistances,
+  calculateTotalTravelTime,
+  calculateTravelTime
 } from "./lib/optimization";
 
 import {
@@ -54,6 +56,10 @@ export default function App() {
 
   const [totalDistance,
     setTotalDistance] =
+    useState(0);
+
+  const [totalTime,
+    setTotalTime] =
     useState(0);
 
   const [totalPackages,
@@ -211,77 +217,117 @@ const startSimulation =
         /**
          * MATCHING
          */
-        setProcessingStatus(3);
+setProcessingStatus(3);
 
-        const matched =
-          matchAddressToDatabase(
-            cleanText,
-            database
-          );
+const matched =
+  matchAddressToDatabase(
+    cleanText,
+    database
+  );
 
-        if (matched) {
+if (matched) {
 
-          const alreadyExists =
-            allPoints.some(
-              p =>
-                p.rt === matched.rt &&
-                p.rw === matched.rw &&
-                p.desa === matched.desa
-            );
+  /**
+   * Cek apakah titik sudah ada
+   */
+  const existingPoint =
+    allPoints.find(
+      p =>
+        p.rt === matched.rt &&
+        p.rw === matched.rw &&
+        p.desa === matched.desa &&
+        p.nama === matched.nama
+    ) ||
 
-          if (!alreadyExists) {
+    matchedLocations.find(
+      p =>
+        p.rt === matched.rt &&
+        p.rw === matched.rw &&
+        p.desa === matched.desa &&
+        p.nama === matched.nama
+    );
 
-            matchedLocations.push({
+  if (existingPoint) {
 
-              ...matched,
+    /**
+     * Paket tujuan sama
+     */
+    existingPoint.packageCount =
+      (existingPoint.packageCount || 1) + 1;
 
-              uniqueId:
-                Date.now() +
-                Math.random(),
+    existingPoint.packageNames = [
 
-              imageName:
-                item.type === "manual"
-                  ? "Input Manual"
-                  : item.file.name,
+      ...(existingPoint.packageNames || []),
 
-              source:
-                item.type,
+      item.type === "manual"
+        ? "Input Manual"
+        : item.file.name
 
-              status:
-                "belum"
+    ];
 
-            });
+    console.log(
+      "Paket tujuan sama:",
+      existingPoint.nama,
+      existingPoint.desa,
+      existingPoint.packageCount
+    );
 
-          } else {
+  } else {
 
-            console.log(
-              "Alamat sudah pernah diproses:",
-              matched.nama,
-              matched.desa
-            );
+    /**
+     * Titik baru
+     */
+    matchedLocations.push({
 
-          }
+      ...matched,
 
-        } else {
+      uniqueId:
+        Date.now() + Math.random(),
 
-          unmatchedFiles.push({
+      imageName:
+        item.type === "manual"
+          ? "Input Manual"
+          : item.file.name,
 
-            imageName:
-              item.type === "manual"
-                ? "Input Manual"
-                : item.file.name,
+      source:
+        item.type,
 
-            source:
-              item.type,
+      status:
+        "belum",
 
-            ocrText:
-              cleanText
+      packageCount: 1,
 
-            });
+      packageNames: [
 
-          }
+        item.type === "manual"
+          ? "Input Manual"
+          : item.file.name
 
-        }
+      ]
+
+    });
+
+  }
+
+} else {
+
+  unmatchedFiles.push({
+
+    imageName:
+      item.type === "manual"
+        ? "Input Manual"
+        : item.file.name,
+
+    source:
+      item.type,
+
+    ocrText:
+      cleanText
+
+  });
+
+}
+}
 
       /**
        * SIMPAN HISTORY OCR
@@ -398,8 +444,13 @@ const startSimulation =
           optimizedRoute
         );
 
-      setTotalDistance(
-        total
+      setTotalDistance(total);
+
+      const estimatedTime =
+        calculateTotalTravelTime(total);
+
+      setTotalTime(
+        estimatedTime
       );
 
       /**
@@ -451,6 +502,7 @@ const startSimulation =
     database,
     allPoints
   ]);
+
 
 return (
 
@@ -707,13 +759,14 @@ return (
             <RouteResult
               route={fullRoute}
               totalDistance={totalDistance}
+              totalTime={calculateTravelTime(totalDistance)}
               segmentDistances={segmentDistances}
               updateStatus={updateStatus}
             />
           </div>
 
         </div>
-        
+
       </div>
 
     </div>

@@ -1,178 +1,227 @@
+import {
+  calculateTravelTime
+} from "../lib/optimization";
+
 export default function RouteResult({
   route = [],
   totalDistance = 0,
+  totalTime = "",
   segmentDistances = [],
   updateStatus
 }) {
 
-  return (
-    <div className="mt-4">
+return (
+  <div className="mt-4">
 
-      {/* Statistik */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+    {/* Ringkasan */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
 
-        <div className="bg-blue-50 p-3 rounded-xl">
-          <div className="text-xs text-slate-500">
-            Total Titik
-          </div>
-
-          <div className="text-xl font-bold">
-            {route.length}
-          </div>
+      <div className="bg-blue-50 rounded-xl p-4">
+        <div className="text-xs text-slate-500">
+          Total Titik
         </div>
-
-        <div className="bg-green-50 p-3 rounded-xl">
-          <div className="text-xs text-slate-500">
-            Total Jarak
-          </div>
-
-          <div className="text-xl font-bold">
-            {Number(totalDistance).toFixed(2)}
-            km
-          </div>
+        <div className="text-2xl font-bold text-blue-700">
+          {route.length}
         </div>
-
-        <div className="bg-orange-50 p-3 rounded-xl">
-          <div className="text-xs text-slate-500">
-            Status
-          </div>
-
-          <div className="text-lg font-bold text-orange-600">
-            Optimal
-          </div>
-        </div>
-
       </div>
 
-      <h3 className="font-bold text-lg mb-3">
-        🚚 Urutan Rute Pengiriman
-      </h3>
+      <div className="bg-green-50 rounded-xl p-4">
+        <div className="text-xs text-slate-500">
+          Total Jarak
+        </div>
+        <div className="text-2xl font-bold text-green-700">
+          {Number(totalDistance).toFixed(2)} km
+        </div>
+      </div>
 
-      {route.map((r, i) => (
+      <div className="bg-yellow-50 rounded-xl p-4">
+        <div className="text-xs text-slate-500">
+          Estimasi Waktu
+        </div>
+        <div className="text-xl font-bold text-yellow-700">
+          {totalTime}
+        </div>
+      </div>
+
+      <div className="bg-orange-50 rounded-xl p-4">
+        <div className="text-xs text-slate-500">
+          Status
+        </div>
+        <div className="text-xl font-bold text-orange-600">
+          Optimal
+        </div>
+      </div>
+
+    </div>
+
+    <h3 className="font-bold text-xl mb-4">
+      🚚 Urutan Rute Pengiriman
+    </h3>
+
+    {route.map((r, i) => {
+
+      const distance =
+        i === 0
+          ? 0
+          : segmentDistances[i - 1]?.distance || 0;
+
+      const travelTime =
+        calculateTravelTime(distance);
+
+      return (
 
         <div
           key={i}
           className="
-            border
-            rounded-xl
-            p-3
-            mb-3
             bg-white
+            border
+            rounded-2xl
             shadow-sm
+            p-4
+            mb-4
           "
         >
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-start">
 
             <div>
 
-            <div className="font-bold">
-              {i + 1}. {r.nama}
-            </div>
-
-            {r.desa && (
-              <div className="text-xs text-blue-600 font-medium">
-                Desa {r.desa}
+              <div className="font-bold text-lg">
+                {i + 1}. {r.nama}
               </div>
-            )}
 
-            <div className="text-xs text-slate-500">
-              RT {r.rt} RW {r.rw}
-            </div>
+              {r.packageCount > 1 && (
+              <div className="inline-block mt-1 bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">
+                  📦 {r.packageCount} Paket
+              </div>
+              )}
+
+              {r.desa && (
+                <div className="text-blue-600 font-medium">
+                  Desa {r.desa}
+                </div>
+              )}
+
+              <div className="text-slate-500 text-sm">
+                RT {r.rt} RW {r.rw}
+              </div>
+
+              {i > 0 && (
+                <div className="mt-3 text-sm">
+
+                  <div>
+                    📍 Dari titik sebelumnya :
+                    <b> {distance.toFixed(2)} km</b>
+                  </div>
+
+                  <div>
+                    ⏱ Estimasi :
+                    <b> {travelTime}</b>
+                  </div>
+
+                </div>
+              )}
 
             </div>
 
             {r.type !== "gudang" && (
 
-              <>
-                {r.status !== "sudah" ? (
+              r.status !== "sudah" ? (
 
-                  <button
-                    onClick={() => {
+                <button
+                  onClick={() =>
+                    updateStatus(
+                      r.uniqueId,
+                      "sudah"
+                    )
+                  }
+                  className="
+                    bg-green-600
+                    hover:bg-green-700
+                    text-white
+                    px-4
+                    py-2
+                    rounded-xl
+                    text-sm
+                  "
+                >
+                  Sudah Diantar
+                </button>
 
-                      console.log("DATA ROUTE:");
-                      console.log(r);
+              ) : (
 
-                      updateStatus(
-                        r.uniqueId,
-                        "sudah"
-                      )
+                <span className="text-green-600 font-bold">
+                  ✅ Selesai
+                </span>
 
-
-                    }}
-                    className="
-                      bg-green-500
-                      hover:bg-green-600
-                      text-white
-                      px-3
-                      py-1
-                      rounded-lg
-                      text-sm
-                    "
-                  >
-                    Sudah Diantar
-                  </button>
-
-                ) : (
-
-                  <span className="
-                    text-green-600
-                    font-bold
-                  ">
-                    ✅ Selesai
-                  </span>
-
-                )}
-              </>
+              )
 
             )}
 
           </div>
 
-          {/* Jarak ke titik berikutnya */}
+          {/* Ke tujuan berikutnya */}
 
-          {segmentDistances[i] && (
+          {i < route.length - 1 && segmentDistances[i] && (
 
             <div
               className="
-                mt-2
+                mt-4
                 bg-blue-50
-                text-blue-700
-                px-3
-                py-2
-                rounded-lg
+                rounded-xl
+                p-3
                 text-sm
-                font-medium
+                text-blue-700
               "
             >
-              📍 Jarak ke titik berikutnya:
-              {" "}
-              {segmentDistances[i]
-                .distance
-                .toFixed(2)}
-              km
+              ➜ Ke tujuan berikutnya
+
+              <br />
+
+              Jarak :
+              <b>
+                {" "}
+                {segmentDistances[i].distance.toFixed(2)} km
+              </b>
+
+              <br />
+
+              Estimasi :
+              <b>
+                {" "}
+                {calculateTravelTime(
+                  segmentDistances[i].distance
+                )}
+              </b>
+
             </div>
 
           )}
 
-          {!segmentDistances[i] &&
-            i === route.length - 1 && (
+          {i === route.length - 1 && (
 
-            <div className="
-              mt-2
-              text-green-600
-              text-sm
-              font-medium
-            ">
-              ✓ Tujuan Terakhir
+            <div
+              className="
+                mt-4
+                bg-green-50
+                rounded-xl
+                p-3
+                text-green-700
+                font-medium
+              "
+            >
+              ✅ Tujuan terakhir telah dicapai
             </div>
 
           )}
 
         </div>
 
-      ))}
+      );
 
-    </div>
-  );
+    })}
+
+  </div>
+);
+
 }
