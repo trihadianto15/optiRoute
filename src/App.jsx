@@ -17,10 +17,6 @@ import {
 
 import {
   solveNearestNeighbor,
-  calculateRouteDistance,
-  calculateSegmentDistances,
-  calculateTotalTravelTime,
-  calculateTravelTime
 } from "./lib/optimization";
 
 import {
@@ -31,6 +27,10 @@ import {
   extractTextFromImage,
   normalizeText
 } from "./lib/ocr";
+
+import {
+    getOSRMRoute
+} from "./lib/osrm";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -74,6 +74,9 @@ export default function App() {
   const [activeTab, setActiveTab] =
   useState("dashboard");
 
+  const [polyline, setPolyline] =
+useState([]);
+
   /**
    * LOAD DATABASE MYSQL
    */
@@ -83,9 +86,15 @@ export default function App() {
 
     try {
 
+      console.log(API_URL)
+      
+
       const response = await axios.get(
         `${API_URL}/route_optimization`
       );
+
+      console.log(response)
+
 
       const formattedData = response.data.map((loc) => ({
         ...loc,
@@ -448,34 +457,37 @@ if (matched) {
         optimizedRoute
       );
 
-      /**
-       * JARAK ANTAR TITIK
-       */
-      const segments =
-        calculateSegmentDistances(
-          optimizedRoute
-        );
+      const osrm =
+await getOSRMRoute(
+    optimizedRoute
+);
 
-      setSegmentDistances(
-        segments
-      );
+if(!osrm){
 
-      /**
-       * TOTAL JARAK
-       */
-      const total =
-        calculateRouteDistance(
-          optimizedRoute
-        );
+    alert("OSRM gagal");
 
-      setTotalDistance(total);
+    return;
 
-      const estimatedTime =
-        calculateTotalTravelTime(total);
+}
 
-      setTotalTime(
-        estimatedTime
-      );
+setPolyline(
+    osrm.polyline
+);
+
+setSegmentDistances(
+    osrm.segments
+);
+
+
+setTotalDistance(
+    osrm.totalDistance
+);
+
+
+setTotalTime(
+    osrm.totalTime
+);
+
 
       /**
        * SIMPAN HISTORY
@@ -489,7 +501,7 @@ if (matched) {
               updatedPoints.length,
 
             total_jarak:
-              total
+              osrm.totalDistance
 
           }
         );
@@ -753,10 +765,11 @@ return (
               p-4
             "
           >
-            <RouteMap
-              route={fullRoute}
-              allPoints={allPoints}
-            />
+<RouteMap
+    route={fullRoute}
+    allPoints={allPoints}
+    polyline={polyline}
+/>
           </div>
 
           {/* HASIL RUTE */}
@@ -779,13 +792,13 @@ return (
               🚚 Hasil Optimasi Rute
             </h2>
 
-            <RouteResult
-              route={fullRoute}
-              totalDistance={totalDistance}
-              totalTime={calculateTravelTime(totalDistance)}
-              segmentDistances={segmentDistances}
-              updateStatus={updateStatus}
-            />
+<RouteResult
+  route={fullRoute}
+  totalDistance={totalDistance}
+  totalTime={totalTime}
+  segmentDistances={segmentDistances}
+  updateStatus={updateStatus}
+/>
           </div>
 
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import {
   MapContainer,
@@ -13,8 +13,6 @@ import {
 import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
-
-import { getOSRMRoute } from "../lib/osrm";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -40,18 +38,14 @@ function FitBounds({ route }) {
     const bounds = L.latLngBounds(
 
       route.map(item => [
-
         item.latitude,
         item.longitude
-
       ])
 
     );
 
     map.fitBounds(bounds, {
-
       padding: [40, 40]
-
     });
 
   }, [route, map]);
@@ -63,34 +57,10 @@ function FitBounds({ route }) {
 export default function RouteMap({
 
   route = [],
-  allPoints = []
+  allPoints = [],
+  polyline = []
 
 }) {
-
-  const [roadRoute, setRoadRoute] =
-    useState([]);
-
-  useEffect(() => {
-
-    async function loadRoad() {
-
-      if (route.length < 2) {
-
-        setRoadRoute([]);
-        return;
-
-      }
-
-      const result =
-        await getOSRMRoute(route);
-
-      setRoadRoute(result);
-
-    }
-
-    loadRoad();
-
-  }, [route]);
 
   const center =
     route.length > 0
@@ -169,10 +139,10 @@ export default function RouteMap({
 
         ))}
 
-        {roadRoute.length > 0 && (
+        {polyline.length > 0 && (
 
           <Polyline
-            positions={roadRoute}
+            positions={polyline}
             color="#2563eb"
             weight={6}
           />

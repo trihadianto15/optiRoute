@@ -18,19 +18,6 @@ export function calculateDistance(a, b) {
 
 
 /**
- * TOTAL JARAK RUTE
- */
-export function calculateRouteDistance(route) {
-  let total = 0;
-
-  for (let i = 0; i < route.length - 1; i++) {
-    total += calculateDistance(route[i], route[i + 1]);
-  }
-
-  return total;
-}
-
-/**
  * NEAREST NEIGHBOR
  */
 export function solveNearestNeighbor(locations) {
@@ -76,24 +63,6 @@ export function solveNearestNeighbor(locations) {
   return route;
 }
 
-export function calculateSegmentDistances(route) {
-  const segments = [];
-
-  for (let i = 0; i < route.length - 1; i++) {
-    const distance = calculateDistance(
-      route[i],
-      route[i + 1]
-    );
-
-    segments.push({
-      from: route[i].nama,
-      to: route[i + 1].nama,
-      distance
-    });
-  }
-
-  return segments;
-}
 
 /**
  * Hitung estimasi waktu tempuh
@@ -105,7 +74,7 @@ export function calculateSegmentDistances(route) {
  */
 export function calculateTravelTime(distance) {
 
-  const speed = 20; // km/jam
+  const speed = 15; // km/jam
 
   const minutes =
     Math.round((distance / speed) * 60);
@@ -123,13 +92,3 @@ export function calculateTravelTime(distance) {
 /**
  * Hitung total estimasi waktu
  */
-export function calculateTotalTravelTime(totalDistance) {
-
-  const averageSpeed = 30;
-
-  const minutes =
-    (totalDistance / averageSpeed) * 60;
-
-  return Math.round(minutes);
-
-}
