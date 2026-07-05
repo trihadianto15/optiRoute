@@ -202,10 +202,26 @@ const startSimulation =
           item.type === "manual"
         ) {
 
-          cleanText =
-            normalizeText(
-              item.text
-            );
+      matchedLocations.push({
+
+      ...item.location,
+
+      uniqueId:
+      Date.now()+Math.random(),
+
+      imageName:"Input Manual",
+
+      source:"manual",
+
+      status:"belum",
+
+      packageCount:1,
+
+      packageNames:["Input Manual"]
+
+      });
+
+      continue;
 
           console.log(
             "MANUAL:",
@@ -663,9 +679,8 @@ return (
 
               <UploadSection
                 uploads={uploads}
-                setUploads={
-                  setUploads
-                }
+                setUploads={setUploads}
+                database={database}
               />
 
               <button

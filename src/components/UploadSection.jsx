@@ -14,7 +14,8 @@ import {
 
 export default function UploadSection({
   uploads,
-  setUploads
+  setUploads,
+  database
 }) {
 
   const cameraRef = useRef(null);
@@ -29,9 +30,44 @@ export default function UploadSection({
   const [mode, setMode] =
     useState("upload");
 
-  const [manualAddress,
-    setManualAddress] =
-    useState("");
+  const [selectedDesa,
+      setSelectedDesa] =
+      useState("");
+
+  const [selectedRT,
+      setSelectedRT] =
+      useState("");
+
+  const [selectedRW,
+      setSelectedRW] =
+      useState("");
+
+  const desaList = [
+    ...new Set(
+        database.map(item => item.desa)
+    )
+];
+
+const rtList = [
+    ...new Set(
+        database
+            .filter(item =>
+                item.desa === selectedDesa
+            )
+            .map(item => item.rt)
+    )
+];
+
+const rwList = [
+    ...new Set(
+        database
+            .filter(item =>
+                item.desa === selectedDesa &&
+                Number(item.rt) === Number(selectedRT)
+            )
+            .map(item => item.rw)
+    )
+];
 
   const handleFileChange = (e) => {
 
@@ -59,19 +95,43 @@ export default function UploadSection({
 
   const addManualAddress = () => {
 
-    if (!manualAddress.trim())
-      return;
+    if (
+        !selectedDesa ||
+        !selectedRT ||
+        !selectedRW
+    ) {
+        alert("Lengkapi Desa, RT dan RW");
+        return;
+    }
 
-    setUploads((prev) => [
-      ...prev,
-      {
-        type: "manual",
-        text: manualAddress
-      }
+    const selectedLocation =
+        database.find(item =>
+            item.desa === selectedDesa &&
+            Number(item.rt) === Number(selectedRT) &&
+            Number(item.rw) === Number(selectedRW)
+        );
+
+    if (!selectedLocation) {
+        alert("Lokasi tidak ditemukan");
+        return;
+    }
+
+    setUploads(prev => [
+
+        ...prev,
+
+        {
+            type: "manual",
+            location: selectedLocation
+        }
+
     ]);
 
-    setManualAddress("");
-  };
+    setSelectedDesa("");
+    setSelectedRT("");
+    setSelectedRW("");
+
+};
 
   const removeItem = (index) => {
 
@@ -201,52 +261,117 @@ export default function UploadSection({
         {/* MANUAL */}
         {mode === "manual" && (
 
-          <div>
+        <div className="space-y-3">
 
-            <textarea
-              value={
-                manualAddress
-              }
-              onChange={(e) =>
-                setManualAddress(
-                  e.target.value
-                )
-              }
-              placeholder="
-              Contoh:
-              RT 22 RW 04
-              Desa Pawenang
-              Nagrak Sukabumi
-              "
-              className="
-                w-full
-                border
-                rounded-xl
-                p-3
-                h-28
-              "
-            />
+        <select
 
-            <button
-              onClick={
-                addManualAddress
-              }
-              className="
-                w-full
-                mt-3
-                bg-green-600
-                text-white
-                p-3
-                rounded-xl
-              "
-            >
-              Tambahkan Alamat
-            </button>
+        className="w-full border rounded-xl p-3"
 
-          </div>
+        value={selectedDesa}
 
-        )}
+        onChange={(e)=>{
 
+        setSelectedDesa(e.target.value);
+
+        setSelectedRT("");
+
+        setSelectedRW("");
+
+        }}
+
+        >
+
+        <option value="">Pilih Desa</option>
+
+        {desaList.map(desa=>(
+
+        <option key={desa} value={desa}>
+
+        {desa}
+
+        </option>
+
+        ))}
+
+        </select>
+
+        <select
+
+        className="w-full border rounded-xl p-3"
+
+        value={selectedRT}
+
+        onChange={(e)=>{
+
+        setSelectedRT(e.target.value);
+
+        setSelectedRW("");
+
+        }}
+
+        disabled={!selectedDesa}
+
+        >
+
+        <option value="">Pilih RT</option>
+
+        {rtList.map(rt=>(
+
+        <option key={rt} value={rt}>
+
+        RT {rt}
+
+        </option>
+
+        ))}
+
+        </select>
+
+        <select
+
+        className="w-full border rounded-xl p-3"
+
+        value={selectedRW}
+
+        onChange={(e)=>
+
+        setSelectedRW(e.target.value)
+
+        }
+
+        disabled={!selectedRT}
+
+        >
+
+        <option value="">Pilih RW</option>
+
+        {rwList.map(rw=>(
+
+        <option key={rw} value={rw}>
+
+        RW {rw}
+
+        </option>
+
+        ))}
+
+        </select>
+
+        <button
+
+        onClick={addManualAddress}
+
+        className="w-full bg-green-600 text-white p-3 rounded-xl"
+
+        >
+
+        Tambah Tujuan
+
+        </button>
+
+        </div>
+
+      )}
         <input
           ref={cameraRef}
           type="file"
@@ -348,7 +473,21 @@ export default function UploadSection({
                         </div>
 
                         <p className="text-sm">
-                          {item.text}
+
+                        <b>Desa</b> {item.location.desa}
+
+                        <br/>
+
+                        <b>RT</b> {item.location.rt}
+
+                        <br/>
+
+                        <b>RW</b> {item.location.rw}
+
+                        <br/>
+
+                        <b>Nama</b> {item.location.nama}
+
                         </p>
 
                       </div>
