@@ -1,3 +1,8 @@
+// src/lib/osrm.js
+
+// Kecepatan rata-rata kendaraan (km/jam)
+const AVERAGE_SPEED = 21;
+
 export async function getOSRMRoute(route) {
 
   if (!route || route.length < 2) {
@@ -22,7 +27,9 @@ export async function getOSRMRoute(route) {
 
     const data = await response.json();
 
-    if (data.code !== "Ok") return null;
+    if (data.code !== "Ok") {
+      return null;
+    }
 
     const routeData = data.routes[0];
 
@@ -33,7 +40,19 @@ export async function getOSRMRoute(route) {
 
     const segments = [];
 
+    let totalTime = 0;
+
     routeData.legs.forEach((leg, index) => {
+
+      const distance = leg.distance / 1000;
+
+      // waktu dihitung dari jarak OSRM
+      const duration =
+        Math.round(
+          (distance / AVERAGE_SPEED) * 60
+        );
+
+      totalTime += duration;
 
       segments.push({
 
@@ -41,14 +60,20 @@ export async function getOSRMRoute(route) {
 
         to: route[index + 1].nama,
 
-        distance: leg.distance / 1000,
+        distance,
 
-        duration:
-          Math.round(leg.duration / 60)
+        duration
 
       });
 
     });
+
+    console.log("=================================");
+    console.log("AVERAGE SPEED :", AVERAGE_SPEED);
+    console.log("TOTAL DISTANCE :", routeData.distance / 1000);
+    console.log("TOTAL TIME :", totalTime);
+    console.log("SEGMENTS :", segments);
+    console.log("=================================");
 
     return {
 
@@ -57,8 +82,7 @@ export async function getOSRMRoute(route) {
       totalDistance:
         routeData.distance / 1000,
 
-      totalTime:
-        Math.round(routeData.duration / 60),
+      totalTime,
 
       segments
 
@@ -66,7 +90,7 @@ export async function getOSRMRoute(route) {
 
   } catch (err) {
 
-    console.error(err);
+    console.error("OSRM ERROR :", err);
 
     return null;
 
@@ -74,75 +98,32 @@ export async function getOSRMRoute(route) {
 
 }
 
+
+/**
+ * Total waktu perjalanan
+ */
 export async function calculateRoadTime(route) {
 
-  if (!route || route.length < 2) return 0;
+  const result =
+    await getOSRMRoute(route);
 
-  let totalDuration = 0;
+  if (!result) return 0;
 
-  for (let i = 0; i < route.length - 1; i++) {
+  return result.totalTime;
 
-    const from = route[i];
-    const to = route[i + 1];
-
-    const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
-      `${from.longitude},${from.latitude};` +
-      `${to.longitude},${to.latitude}` +
-      `?overview=false`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.code === "Ok") {
-      totalDuration += data.routes[0].duration;
-    }
-  }
-
-  return Math.round(totalDuration / 60);
 }
 
+
+/**
+ * Detail tiap segmen
+ */
 export async function calculateRoadSegments(route) {
 
-  if (!route || route.length < 2) return [];
+  const result =
+    await getOSRMRoute(route);
 
-  const segments = [];
+  if (!result) return [];
 
-  for (let i = 0; i < route.length - 1; i++) {
-
-    const from = route[i];
-    const to = route[i + 1];
-
-    const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
-      `${from.longitude},${from.latitude};` +
-      `${to.longitude},${to.latitude}` +
-      `?overview=false`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.code === "Ok") {
-
-      segments.push({
-
-        from: from.nama,
-
-        to: to.nama,
-
-        distance:
-          data.routes[0].distance / 1000,
-
-        duration:
-          Math.round(data.routes[0].duration / 60)
-
-      });
-
-    }
-
-  }
-
-  return segments;
+  return result.segments;
 
 }
-

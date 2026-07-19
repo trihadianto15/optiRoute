@@ -11,9 +11,10 @@ export function calculateDistance(a, b) {
     Math.sin(dLat / 2) ** 2 +
     Math.sin(dLon / 2) ** 2 *
     Math.cos(lat1) *
-    Math.cos(lat2);
+    Math.cos(lat2)
 
   return 2 * R * Math.asin(Math.sqrt(h));
+
 }
 
 
@@ -74,7 +75,7 @@ export function solveNearestNeighbor(locations) {
  */
 export function calculateTravelTime(distance) {
 
-  const speed = 15; // km/jam
+  const speed = 25; // km/jam
 
   const minutes =
     Math.round((distance / speed) * 60);
@@ -89,6 +90,3 @@ export function calculateTravelTime(distance) {
   return `${hour} jam ${minute} menit`;
 }
 
-/**
- * Hitung total estimasi waktu
- */

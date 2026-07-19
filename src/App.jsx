@@ -16,11 +16,13 @@ import {
 } from "./lib/mockData";
 
 import {
-  solveNearestNeighbor,
+  calculateDistance,
+  solveNearestNeighbor
 } from "./lib/optimization";
 
 import {
-  optimizeTSP
+  optimizeTSP,
+  calculateTotalDistance
 } from "./lib/tsp";
 
 import {
@@ -416,17 +418,36 @@ if (matched) {
       /**
        * GABUNGKAN DATA LAMA + BARU
        */
-      const updatedPoints = [
+const updatedPoints = [...allPoints];
 
-        ...allPoints,
+matchedLocations.forEach((newPoint) => {
 
-        ...matchedLocations
+  const exist = updatedPoints.find(
+    p =>
+      Number(p.rt) === Number(newPoint.rt) &&
+      Number(p.rw) === Number(newPoint.rw) &&
+      p.desa?.toLowerCase() === newPoint.desa?.toLowerCase() &&
+      p.nama?.toLowerCase() === newPoint.nama?.toLowerCase()
+  );
 
-      ];
+  if (exist) {
 
-      setAllPoints(
-        updatedPoints
-      );
+    exist.packageCount =
+      (exist.packageCount || 1) +
+      (newPoint.packageCount || 1);
+
+    exist.packageNames = [
+      ...(exist.packageNames || []),
+      ...(newPoint.packageNames || [])
+    ];
+
+  } else {
+
+    updatedPoints.push(newPoint);
+
+  }
+
+});
 
       /**
        * TOTAL PAKET
@@ -434,6 +455,30 @@ if (matched) {
       setTotalPackages(
         updatedPoints.length
       );
+
+const points = [
+  GUDANG_LOCATION,
+  ...updatedPoints
+];
+
+// Membuat matriks jarak Haversine
+const distanceMatrix = points.map((from) => {
+  const row = {};
+
+  points.forEach((to) => {
+    row[to.nama] = Number(
+      calculateDistance(from, to).toFixed(2)
+    );
+  });
+
+  return {
+    Lokasi: from.nama,
+    ...row
+  };
+});
+
+console.log("=== MATRIKS JARAK HAVERSINE ===");
+console.table(distanceMatrix);
 
       /**
        * NEAREST NEIGHBOR
@@ -449,9 +494,18 @@ if (matched) {
 
         ]);
 
-      console.log(
-        "Nearest Neighbor:",
-        nnRoute
+      console.log("=== HASIL NEAREST NEIGHBOR ===");
+
+      console.table(
+        nnRoute.map((item, index) => ({
+          Urutan: index + 1,
+          Lokasi: item.nama,
+          RT: item.rt,
+          RW: item.rw,
+          Desa: item.desa,
+          Latitude: item.latitude,
+          Longitude: item.longitude
+        }))
       );
 
       /**
@@ -464,9 +518,39 @@ if (matched) {
           nnRoute
         );
 
-      console.log(
-        "TSP:",
-        optimizedRoute
+      const nnDistance =
+        calculateTotalDistance(nnRoute);
+
+      const tspDistance =
+        calculateTotalDistance(optimizedRoute);
+
+      console.log("===== PERBANDINGAN NN DAN TSP =====");
+
+      console.table([
+        {
+          Metode: "Nearest Neighbor",
+          "Total Jarak (km)": Number(nnDistance.toFixed(2))
+        },
+        {
+          Metode: "TSP (2-Opt)",
+          "Total Jarak (km)": Number(tspDistance.toFixed(2))
+        },
+        {
+          Metode: "Penghematan",
+          "Total Jarak (km)": Number((nnDistance - tspDistance).toFixed(2))
+        }
+      ]);
+
+      console.log("=== HASIL TSP ===");
+
+      console.table(
+        optimizedRoute.map((item, index) => ({
+          Urutan: index + 1,
+          Lokasi: item.nama,
+          RT: item.rt,
+          RW: item.rw,
+          Desa: item.desa
+        }))
       );
 
       setFullRoute(

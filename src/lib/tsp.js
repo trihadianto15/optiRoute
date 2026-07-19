@@ -40,7 +40,7 @@ export function optimizeTSP(route) {
   return bestRoute;
 }
 
-function calculateTotalDistance(
+export function calculateTotalDistance(
   route
 ) {
   let total = 0;
