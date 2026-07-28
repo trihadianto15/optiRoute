@@ -14,120 +14,110 @@ app.get("/", (req, res) => {
 /**
  * AMBIL SEMUA LOKASI
  */
-app.get("/route_optimization", (req, res) => {
+app.get("/route_optimization", async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM locations"
+    );
 
-  db.query(
-    "SELECT * FROM locations",
-    (err, result) => {
+    res.json(result.rows);
 
-      if (err) {
-        return res.status(500).json(err);
-      }
-
-      res.json(result);
-
-    }
-  );
-
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 /**
  * UPDATE STATUS PAKET
  */
-app.put(
-  "/route_optimization/:id/status",
-  (req, res) => {
+app.put("/route_optimization/:id/status", async (req, res) => {
+
+  try {
 
     const { id } = req.params;
     const { status } = req.body;
 
-    db.query(
-      "UPDATE locations SET status=? WHERE id=?",
-      [status, id],
-      (err) => {
-
-        if (err) {
-          return res.status(500).json(err);
-        }
-
-        res.json({
-          success: true,
-          message: "Status berhasil diupdate"
-        });
-
-      }
+    await db.query(
+      "UPDATE locations SET status=$1 WHERE id=$2",
+      [status, id]
     );
 
+    res.json({
+      success: true,
+      message: "Status berhasil diupdate"
+    });
+
+  } catch (err) {
+
+    res.status(500).json(err);
+
   }
-);
+
+});
 
 /**
  * SIMPAN HISTORY
  */
-app.post(
-  "/route_history",
-  (req, res) => {
+app.post("/route_history", async (req, res) => {
+
+  try {
 
     const {
       total_titik,
       total_jarak
     } = req.body;
 
-    db.query(
+    await db.query(
       `
       INSERT INTO route_history
       (
         total_titik,
         total_jarak
       )
-      VALUES (?,?)
+      VALUES ($1,$2)
       `,
       [
         total_titik,
         total_jarak
-      ],
-      (err) => {
-
-        if (err) {
-          return res.status(500).json(err);
-        }
-
-        res.json({
-          success: true
-        });
-
-      }
+      ]
     );
 
+    res.json({
+      success: true
+    });
+
+  } catch (err) {
+
+    res.status(500).json(err);
+
   }
-);
+
+});
 
 /**
  * LIHAT HISTORY
  */
-app.get(
-  "/route_history",
-  (req, res) => {
+app.get("/route_history", async (req, res) => {
 
-    db.query(
+  try {
+
+    const result = await db.query(
       `
       SELECT *
       FROM route_history
       ORDER BY created_at DESC
-      `,
-      (err, result) => {
-
-        if (err) {
-          return res.status(500).json(err);
-        }
-
-        res.json(result);
-
-      }
+      `
     );
 
+    res.json(result.rows);
+
+  } catch (err) {
+
+    res.status(500).json(err);
+
   }
-);
+
+});
 
 const PORT = process.env.PORT || 3001;
 

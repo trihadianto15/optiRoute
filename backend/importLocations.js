@@ -1,41 +1,68 @@
-const XLSX = require("xlsx");
-const mysql = require("mysql2");
+require("dotenv").config();
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "route_optimization"
+const XLSX = require("xlsx");
+const { Pool } = require("pg");
+
+const db = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-const workbook = XLSX.readFile("data_pengiriman.xlsx");
+async function importExcel() {
 
-for (const sheetName of workbook.SheetNames) {
+  const workbook = XLSX.readFile("data_pengiriman.xlsx");
 
-  const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(sheet);
+  for (const sheetName of workbook.SheetNames) {
 
-  console.log(`Import ${sheetName}`);
+    console.log(`Import ${sheetName}`);
 
-  rows.forEach(row => {
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet);
 
-    db.query(
-      `INSERT INTO locations
-      (nama, desa, rt, rw, latitude, longitude, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        row.nama,
-        row.desa || sheetName,
-        row.rt,
-        row.rw,
-        row.latitude,
-        row.longitude,
-        "belum"
-      ]
-    );
+    for (const row of rows) {
 
-  });
+      await db.query(
+        `
+        INSERT INTO locations
+        (
+          nama,
+          desa,
+          rt,
+          rw,
+          latitude,
+          longitude,
+          status
+        )
+        VALUES
+        (
+          $1,$2,$3,$4,$5,$6,$7
+        )
+        `,
+        [
+          row.nama,
+          row.desa || sheetName,
+          row.rt,
+          row.rw,
+          row.latitude,
+          row.longitude,
+          "belum"
+        ]
+      );
+
+    }
+
+  }
+
+  console.log("Import selesai");
+
+  await db.end();
 
 }
 
-console.log("Import selesai");
+importExcel().catch(console.error);
