@@ -91,11 +91,11 @@ useState([]);
       console.log(API_URL)
       
 
-      const response = await axios.get(
-        `${API_URL}/route_optimization`
-      );
+const response = await axios.get(
+  `${API_URL}/route_optimization`
+);
 
-      console.log(response)
+console.log(response.data);
 
 
       const formattedData = response.data.map((loc) => ({
