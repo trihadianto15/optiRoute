@@ -52,10 +52,15 @@ module.exports = async (req, res) => {
 
     } catch (err) {
 
-        res.status(500).json({
-            error: err.message
-        });
+    console.error(err);
 
-    }
+    return res.status(500).json({
+        error: err.message,
+        code: err.code,
+        detail: err.detail,
+        hint: err.hint
+    });
+
+}
 
 };
