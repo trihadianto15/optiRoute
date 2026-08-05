@@ -69,13 +69,9 @@ export function solveNearestNeighbor(locations) {
  * Hitung estimasi waktu tempuh
  * Kecepatan rata-rata motor = 30 km/jam
  */
-/**
- * Estimasi waktu perjalanan
- * Asumsi kecepatan kendaraan 30 km/jam
- */
 export function calculateTravelTime(distance) {
 
-  const speed = 25; // km/jam
+  const speed = 21; // km/jam
 
   const minutes =
     Math.round((distance / speed) * 60);

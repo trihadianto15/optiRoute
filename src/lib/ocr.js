@@ -148,7 +148,7 @@ export function extractRTRW(text) {
   }
 
   /**
-   * 🔥 NEW: kasus OCR nyatu (RT1804 / RT 1804 / 1804)
+   * (RT1804 / RT 1804 / 1804)
    * heuristic split aman
    */
   match = normalized.match(/rt\s*(\d{3,4})/i);
