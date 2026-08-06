@@ -588,6 +588,9 @@ setTotalTime(
     osrm.totalTime
 );
 
+setAllPoints(
+  updatedPoints
+);
 
       /**
        * SIMPAN HISTORY
