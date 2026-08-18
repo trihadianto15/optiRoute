@@ -1,5 +1,3 @@
-// src/lib/osrm.js
-
 // Kecepatan rata-rata kendaraan (km/jam)
 const AVERAGE_SPEED = 21;
 
