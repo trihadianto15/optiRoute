@@ -1,5 +1,5 @@
 // Kecepatan rata-rata kendaraan (km/jam)
-const AVERAGE_SPEED = 21;
+const AVERAGE_SPEED = 24;
 
 export async function getOSRMRoute(route) {
 
